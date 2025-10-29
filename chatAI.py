@@ -24,7 +24,8 @@ def get_identity_prompt(identity_id):
         filepath = os.path.join('prompt', filename)
         with open(filepath, 'r', encoding='utf-8') as f:
             persona_prompt = f.read().strip()
-            return f"{base_prompt}\n\n{persona_prompt}"
+            # 身份设定文件内容将覆盖基础指令
+            return persona_prompt
     except FileNotFoundError:
         return base_prompt
 
@@ -36,13 +37,19 @@ def get_response(user_id, user_message):
     if history is None:
         history = []
 
+    # 截断历史记录，只保留最近的对话用于发送给API
+    # MAX_HISTORY_LEN - 1 (for system prompt) = 30 messages = 15 pairs of user/assistant
+    api_history = history
+    if len(api_history) > (config.MAX_HISTORY_LEN - 1):
+        api_history = api_history[-(config.MAX_HISTORY_LEN - 1):]
+
     # 将身份prompt作为系统消息添加到对话历史的开头
     messages = []
     if identity_prompt:
         messages.append({"role": "system", "content": identity_prompt})
     
-    # 添加历史对话
-    messages.extend(history)
+    # 添加截断后的历史对话
+    messages.extend(api_history)
     
     # 添加当前用户消息
     messages.append({"role": "user", "content": user_message})
@@ -51,9 +58,14 @@ def get_response(user_id, user_message):
 
     # 更新对话历史
     if not ai_response.startswith(("API返回错误:", "请求失败:", "网络请求异常:")):
-        # 更新对话历史
+        # 将新对话添加到完整的历史记录中
         history.append({"role": "user", "content": user_message})
         history.append({"role": "assistant", "content": ai_response})
+        
+        # 再次截断以存入数据库，防止数据库无限膨胀
+        if len(history) > (config.MAX_HISTORY_LEN - 1):
+             history = history[-(config.MAX_HISTORY_LEN - 1):]
+        
         db.update_user_session(user_id, history)
     
     return ai_response

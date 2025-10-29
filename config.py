@@ -6,7 +6,7 @@ AUTH_TOKEN = "_cwfE56txLheIYD3Ykqs-9D2J6AQ6zRDQ-3EB-Zm"
 TOKEN = "mist"
 
 # 最大历史会话长度
-MAX_HISTORY_LEN = 31  # 包含系统指令 + 30条消息
+MAX_HISTORY_LEN = 101  # 包含系统指令 + 100条消息
 
 # 管理员用户ID
 ADMIN_USER_ID = [

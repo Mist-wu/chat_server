@@ -132,13 +132,13 @@ def wechat():
                             try:
                                 with open(config.FEEDBACK_FILE, 'r', encoding='utf-8') as f:
                                     lines = f.readlines()
-                                if len(lines) <= 30:
+                                if len(lines) <= 5:
                                     open(config.FEEDBACK_FILE, 'w').close()
                                     reply_content = "已清除所有反馈。"
                                 else:
                                     with open(config.FEEDBACK_FILE, 'w', encoding='utf-8') as f:
-                                        f.writelines(lines[:-30])
-                                    reply_content = "已清除最近30条反馈。"
+                                        f.writelines(lines[:-5])
+                                    reply_content = "已清除最近5条反馈。"
                             except FileNotFoundError:
                                 reply_content = "反馈文件不存在，无需清除。"
                     
