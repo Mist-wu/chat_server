@@ -1,0 +1,24 @@
+# CLOUD FLARE 配置
+ACCOUNT_ID = "a100979d641a7b41db7b7cfa3c33d166"
+AUTH_TOKEN = "_cwfE56txLheIYD3Ykqs-9D2J6AQ6zRDQ-3EB-Zm"
+
+# 微信验证token
+TOKEN = "mist"
+
+# 最大历史会话长度
+MAX_HISTORY_LEN = 31  # 包含系统指令 + 30条消息
+
+# 管理员用户ID
+ADMIN_USER_ID = [
+    'oLJUa2F2izQg5s25EBX6dBHwx2YQ',  
+]
+
+# 身份配置
+# 格式: "编号": {"name": "身份名称", "file": "prompt文件名"}
+PERSONAS = {
+    "1": {"name": "找人怼你", "file": "chaojia.txt"},
+    "2": {"name": "我妻由乃", "file": "Gasai.txt"},
+    "3": {"name": "春日野穹", "file": "Kasugano.txt"}
+}
+
+FEEDBACK_FILE = 'user_feedback.txt'
