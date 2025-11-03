@@ -1,6 +1,7 @@
 # CLOUD FLARE 配置
 ACCOUNT_ID = "a100979d641a7b41db7b7cfa3c33d166"
 AUTH_TOKEN = "_cwfE56txLheIYD3Ykqs-9D2J6AQ6zRDQ-3EB-Zm"
+MODEL = "llama-3.1-8b-instruct-fast"
 
 # 微信验证token
 TOKEN = "mist"

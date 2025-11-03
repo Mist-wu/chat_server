@@ -38,7 +38,6 @@ def get_response(user_id, user_message):
         history = []
 
     # 截断历史记录，只保留最近的对话用于发送给API
-    # MAX_HISTORY_LEN - 1 (for system prompt) = 30 messages = 15 pairs of user/assistant
     api_history = history
     if len(api_history) > (config.MAX_HISTORY_LEN - 1):
         api_history = api_history[-(config.MAX_HISTORY_LEN - 1):]
@@ -73,7 +72,8 @@ def get_response(user_id, user_message):
 def chat_with_cf(messages):
     ACCOUNT_ID = config.ACCOUNT_ID
     AUTH_TOKEN = config.AUTH_TOKEN
-    API_URL = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3.1-8b-instruct-fast"
+    MODEL = config.MODEL
+    API_URL = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/{MODEL}"
 
     headers = {
     "Authorization": f"Bearer {AUTH_TOKEN}"
