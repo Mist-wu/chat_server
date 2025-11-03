@@ -7,7 +7,7 @@ import database as db
 def get_identity_prompt(identity_id):
     """根据身份ID获取对应的prompt内容。"""
     # 基础指令，确保语言和格式
-    base_prompt = "你必须始终使用简体中文进行回复，像真人聊天一样回复我，回复不要超过30字。"
+    base_prompt = "你是一个名为'Mist'的AI助手。你的任务是友好、简洁地回答用户的问题。请始终使用简体中文回复。回复应像真人聊天，通常不超过30字，除非用户要求详细解释。"
 
     if identity_id == 0:
         return base_prompt  # 默认身份
