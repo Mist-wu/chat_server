@@ -21,7 +21,8 @@ def get_identity_prompt(identity_id):
         return base_prompt
 
     try:
-        filepath = os.path.join('prompt', filename)
+        # 使用更健壮的路径拼接
+        filepath = os.path.join(os.path.dirname(__file__), 'prompt', filename)
         with open(filepath, 'r', encoding='utf-8') as f:
             persona_prompt = f.read().strip()
             # 身份设定文件内容将覆盖基础指令
@@ -37,59 +38,65 @@ def get_response(user_id, user_message):
     if history is None:
         history = []
 
-    # 截断历史记录，只保留最近的对话用于发送给API
-    api_history = history
-    if len(api_history) > (config.MAX_HISTORY_LEN - 1):
-        api_history = api_history[-(config.MAX_HISTORY_LEN - 1):]
-
-    # 将身份prompt作为系统消息添加到对话历史的开头
-    messages = []
+    # 准备发送给API的消息
+    messages_to_send = []
     if identity_prompt:
-        messages.append({"role": "system", "content": identity_prompt})
+        messages_to_send.append({"role": "system", "content": identity_prompt})
     
-    # 添加截断后的历史对话
-    messages.extend(api_history)
+    # 截断历史记录，只保留最近的对话用于发送给API
+    # MAX_HISTORY_LEN-1 是因为system prompt占了一个位置
+    # 这里我们只取 history 的部分
+    if len(history) > (config.MAX_HISTORY_LEN - 1):
+        messages_to_send.extend(history[-(config.MAX_HISTORY_LEN - 1):])
+    else:
+        messages_to_send.extend(history)
     
     # 添加当前用户消息
-    messages.append({"role": "user", "content": user_message})
+    messages_to_send.append({"role": "user", "content": user_message})
 
-    ai_response = chat_with_cf(messages)
+    ai_response = chat_with_cf(messages_to_send)
 
-    # 更新对话历史
+    # 如果API调用成功，则更新完整的对话历史
     if not ai_response.startswith(("API返回错误:", "请求失败:", "网络请求异常:")):
         # 将新对话添加到完整的历史记录中
         history.append({"role": "user", "content": user_message})
         history.append({"role": "assistant", "content": ai_response})
         
-        # 再次截断以存入数据库，防止数据库无限膨胀
-        if len(history) > (config.MAX_HISTORY_LEN - 1):
-             history = history[-(config.MAX_HISTORY_LEN - 1):]
+        # 统一在这里进行截断，以存入数据库
+        # 确保数据库中存储的总是最新的 config.MAX_HISTORY_LEN 条消息
+        if len(history) > config.MAX_HISTORY_LEN:
+             history = history[-config.MAX_HISTORY_LEN:]
         
         db.update_user_session(user_id, history)
     
     return ai_response
 
 def chat_with_cf(messages):
-    ACCOUNT_ID = config.ACCOUNT_ID
-    AUTH_TOKEN = config.AUTH_TOKEN
-    MODEL = config.MODEL
-    API_URL = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/{MODEL}"
+    # 确认配置已正确加载
+    if not all([config.ACCOUNT_ID, config.AUTH_TOKEN, config.MODEL]):
+        return "网络请求异常: 服务器配置不完整，请联系管理员。"
+
+    API_URL = f"https://api.cloudflare.com/client/v4/accounts/{config.ACCOUNT_ID}/ai/run/@cf/meta/{config.MODEL}"
 
     headers = {
-    "Authorization": f"Bearer {AUTH_TOKEN}"
+        "Authorization": f"Bearer {config.AUTH_TOKEN}"
     }
     data = {
         "messages": messages
     }
     try:
-        response = requests.post(API_URL, headers=headers, json=data, timeout=5)
+        response = requests.post(API_URL, headers=headers, json=data, timeout=10) # 增加超时时间
         if response.status_code == 200:
             result = response.json()
             if result.get('success') and result.get('result'):
-                return result['result']['response']
+                return result['result']['response'].strip() # 清理首尾空格
             else:
+                # 记录更详细的日志
+                print(f"API Error: {result.get('errors')}")
                 return f"API返回错误: {result.get('errors')}"
         else:
-            return f"请求失败: {response.status_code}, {response.text}"
+            print(f"Request failed: {response.status_code}, {response.text}")
+            return f"请求失败: 状态码 {response.status_code}"
     except requests.exceptions.RequestException as e:
+        print(f"Network exception: {e}")
         return f"网络请求异常: {e}"
