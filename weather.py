@@ -94,13 +94,9 @@ def update_weather_cache():
     获取最新的天气数据并更新全局缓存。
     """
     global _weather_data_cache
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始更新天气数据缓存...")
     new_data = _fetch_all_weather_data()
     if new_data:
         _weather_data_cache = new_data
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 天气缓存更新成功，共加载 {len(new_data)} 个城市的数据。")
-    else:
-        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 天气缓存更新失败，未能获取到数据。")
 
 def get_weather(my_city: str):
     """
