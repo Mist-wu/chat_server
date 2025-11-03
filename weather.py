@@ -78,10 +78,15 @@ def _fetch_all_weather_data():
                     
                     final_low = low_temp if low_temp != "-" else high_temp
                     final_high = high_temp if high_temp != "-" else low_temp
+
+                    if final_low == final_high:
+                        temp_str = f"{final_high}摄氏度"
+                    else:
+                        temp_str = f"{final_low}至{final_high}摄氏度"
                     
                     all_data[city] = {
                         "city": city,
-                        "temp": f"{final_low}至{final_high}摄氏度",
+                        "temp": temp_str,
                         "weather_type": weather_day if weather_day != "-" else weather_night,
                         "wind": wind_day if wind_day != "--" else wind_night,
                     }
