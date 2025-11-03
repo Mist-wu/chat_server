@@ -1,6 +1,6 @@
 import hashlib
 import time
-from flask import Flask, request
+from flask import Flask, request, g # 导入 g
 import xml.etree.ElementTree as ET
 import config
 import chatAI
@@ -11,6 +11,15 @@ import threading
 
 # --- Flask Web 应用 ---
 app = Flask(__name__)
+
+# --- 数据库连接管理 ---
+@app.teardown_appcontext
+def close_db(e=None):
+    """在请求结束后关闭数据库连接。"""
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
 
 def schedule_weather_updates():
     """
