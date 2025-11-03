@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup, FeatureNotFound
+import time
 
 HEADERS = {
     "User-Agent": (
@@ -19,24 +20,29 @@ URLS = [
     "http://www.weather.com.cn/textFC/xn.shtml",
 ]
 
+# 用于存储天气数据的全局缓存
+_weather_data_cache = {}
+
 def make_soup(html: str) -> BeautifulSoup:
     for parser in ("html5lib", "lxml", "html.parser"):
         try:
             return BeautifulSoup(html, parser)
         except FeatureNotFound:
             continue
-    # 理论上不会到这里，除非环境极简且无任何解析器
     raise RuntimeError("未找到可用的 HTML 解析器，请安装 html5lib 或 lxml。")
 
-def get_weather(my_city: str):
+def _fetch_all_weather_data():
+    """
+    一次性爬取所有地区的天气数据并返回一个字典。
+    """
+    all_data = {}
     for url in URLS:
         try:
             resp = requests.get(url, headers=HEADERS, timeout=10)
-            # 使用 requests 的自动编码探测更稳妥
-            resp.encoding = resp.apparent_encoding or resp.encoding or "utf-8"
+            resp.encoding = resp.apparent_encoding or "utf-8"
             text = resp.text
-        except Exception as e:
-            # 请求失败则尝试下一个 URL
+        except requests.exceptions.RequestException as e:
+            print(f"请求 {url} 失败: {e}")
             continue
 
         soup = make_soup(text)
@@ -49,45 +55,55 @@ def get_weather(my_city: str):
             trs = table.find_all("tr")
             if len(trs) <= 2:
                 continue
+            
             for tr in trs[2:]:
                 tds = tr.find_all("td")
                 if len(tds) < 8:
                     continue
 
-                # 这里倒着数，因为每个省会的td结构跟其他不一样
                 try:
-                    city_td = tds[-8]
-                    this_city = next(city_td.stripped_strings, "")
+                    city = next(tds[-8].stripped_strings, "")
+                    if not city:
+                        continue
+
+                    high_temp = next(tds[-5].stripped_strings, "-")
+                    low_temp = next(tds[-2].stripped_strings, "-")
+                    weather_day = next(tds[-7].stripped_strings, "-")
+                    weather_night = next(tds[-4].stripped_strings, "-")
+                    wind_day_parts = list(tds[-6].stripped_strings)
+                    wind_night_parts = list(tds[-3].stripped_strings)
+
+                    wind_day = "".join(wind_day_parts[:2]) if wind_day_parts else "--"
+                    wind_night = "".join(wind_night_parts[:2]) if wind_night_parts else "--"
+                    
+                    final_low = low_temp if low_temp != "-" else high_temp
+                    final_high = high_temp if high_temp != "-" else low_temp
+                    
+                    all_data[city] = {
+                        "city": city,
+                        "temp": f"{final_low}至{final_high}摄氏度",
+                        "weather_type": weather_day if weather_day != "-" else weather_night,
+                        "wind": wind_day if wind_day != "--" else wind_night,
+                    }
                 except Exception:
                     continue
+    return all_data
 
-                if this_city == my_city:
-                    try:
-                        high_temp_td = tds[-5]
-                        low_temp_td = tds[-2]
-                        weather_type_day_td = tds[-7]
-                        weather_type_night_td = tds[-4]
-                        wind_td_day = tds[-6]
-                        wind_td_day_night = tds[-3]
+def update_weather_cache():
+    """
+    获取最新的天气数据并更新全局缓存。
+    """
+    global _weather_data_cache
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 开始更新天气数据缓存...")
+    new_data = _fetch_all_weather_data()
+    if new_data:
+        _weather_data_cache = new_data
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 天气缓存更新成功，共加载 {len(new_data)} 个城市的数据。")
+    else:
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] 天气缓存更新失败，未能获取到数据。")
 
-                        high_temp = next(high_temp_td.stripped_strings, "-")
-                        low_temp = next(low_temp_td.stripped_strings, "-")
-                        weather_typ_day = next(weather_type_day_td.stripped_strings, "-")
-                        weather_type_night = next(weather_type_night_td.stripped_strings, "-")
-
-                        wind_day_parts = list(wind_td_day.stripped_strings)
-                        wind_night_parts = list(wind_td_day_night.stripped_strings)
-                        wind_day = "".join(wind_day_parts[:2]) if wind_day_parts else "--"
-                        wind_night = "".join(wind_night_parts[:2]) if wind_night_parts else "--"
-
-                        # 如果没有白天的数据就使用夜间的
-                        low_temp = low_temp if low_temp != "-" else high_temp
-                        high_temp = high_temp if high_temp != "-" else low_temp
-                        temp = f"{low_temp}至{high_temp}摄氏度"
-                        
-                        weather_typ = weather_typ_day if weather_typ_day != "-" else weather_type_night
-                        wind = wind_day if wind_day != "--" else wind_night
-                        return this_city, temp, weather_typ, wind
-                    except Exception:
-                        continue
-    return None
+def get_weather(my_city: str):
+    """
+    从缓存中获取指定城市的天气数据。
+    """
+    return _weather_data_cache.get(my_city)

@@ -6,8 +6,8 @@ MODEL = "llama-3.1-8b-instruct-fast"
 # 微信验证token
 TOKEN = "mist"
 
-APP_ID = "wx65f26291696b201e"
-APP_SECRET = "ce19b78b08c7555e65575a595a751029"
+APP_ID = "wx6db309f2190fce40"
+APP_SECRET = "b4d14710fd09cab5450046cfe974f8d7"
 
 # 最大历史会话长度
 MAX_HISTORY_LEN = 101  # 包含系统指令 + 100条消息

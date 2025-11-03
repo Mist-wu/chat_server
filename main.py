@@ -6,9 +6,20 @@ import config
 import chatAI
 import database
 import command_handler # 导入新的指令处理模块
+import weather
+import threading
 
 # --- Flask Web 应用 ---
 app = Flask(__name__)
+
+def schedule_weather_updates():
+    """
+    定时任务函数，每小时更新一次天气缓存。
+    """
+    while True:
+        weather.update_weather_cache()
+        # 等待1小时
+        time.sleep(3600)
 
 @app.route('/', methods=['GET', 'POST'])
 def wechat():
@@ -90,5 +101,13 @@ def wechat():
 if __name__ == '__main__':
     # 初始化数据库
     database.init_db()
+
+    # 首次立即更新天气缓存
+    weather.update_weather_cache()
+
+    # 启动后台线程定时更新天气
+    update_thread = threading.Thread(target=schedule_weather_updates, daemon=True)
+    update_thread.start()
+
     # 运行 Flask 应用来对接微信
     app.run(host='0.0.0.0', port=80)

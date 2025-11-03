@@ -28,10 +28,13 @@ def handle_command(user_input, from_user_name):
         if args:
             weather_data = weather.get_weather(args)
             if weather_data:
-                city, temp, weather_type, wind = weather_data
+                city = weather_data['city']
+                temp = weather_data['temp']
+                weather_type = weather_data['weather_type']
+                wind = weather_data['wind']
                 reply_content = f"今日{city}的天气是{weather_type}，温度是{temp}，有{wind}。"
             else:
-                reply_content = f"抱歉，未能查询到“{args}”的天气信息，请确认城市名称是否正确。"
+                reply_content = f"抱歉，未能查询到“{args}”的天气信息，请确认城市名称是否正确或等待数据更新。"
         else:
             reply_content = "指令格式错误，请使用：/天气 [城市名]"
 
