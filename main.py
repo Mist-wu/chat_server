@@ -7,6 +7,7 @@ import chatAI
 import database
 import random
 from datetime import datetime
+import weather  # 导入天气查询模块
 
 # --- Flask Web 应用 ---
 app = Flask(__name__)
@@ -65,6 +66,17 @@ def wechat():
                             reply_content = "感谢你的反馈！"
                         else:
                             reply_content = "指令格式错误，请使用：/意见 [内容]"
+
+                    elif command == '/天气':
+                        if args:
+                            weather_data = weather.get_weather(args)
+                            if weather_data:
+                                city, temp, weather_type, wind = weather_data
+                                reply_content = f"今日{city}的天气是{weather_type}，温度是{temp}，有{wind}。"
+                            else:
+                                reply_content = f"抱歉，未能查询到“{args}”的天气信息，请确认城市名称是否正确。"
+                        else:
+                            reply_content = "指令格式错误，请使用：/天气 [城市名]"
 
                     elif command == '/身份列表':
                         reply_content = "可选身份列表：\n"
