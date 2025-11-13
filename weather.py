@@ -108,3 +108,9 @@ def get_weather(my_city: str):
     从缓存中获取指定城市的天气数据。
     """
     return _weather_data_cache.get(my_city)
+
+def get_all_cities():
+    """
+    返回缓存中所有城市的列表。
+    """
+    return list(_weather_data_cache.keys())

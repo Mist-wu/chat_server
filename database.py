@@ -27,14 +27,15 @@ def init_db():
             history TEXT NOT NULL
         )
     ''')
-    # 新增：用户身份设置表
+    # 用户设置表，增加 pending_action 字段
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_settings (
             user_id TEXT PRIMARY KEY,
-            identity_id INTEGER DEFAULT 0
+            identity_id INTEGER DEFAULT 0,
+            pending_action TEXT 
         )
     ''')
-    # 新增：访问日志表
+    # 访问日志表
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS access_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,9 +82,29 @@ def get_user_identity(user_id):
     if row:
         return row[0]
     else:
-        db.execute('INSERT INTO user_settings (user_id, identity_id) VALUES (?, 0)', (user_id,))
+        # 使用 INSERT OR IGNORE 避免在多线程环境下重复插入
+        db.execute('INSERT OR IGNORE INTO user_settings (user_id, identity_id) VALUES (?, 0)', (user_id,))
         db.commit()
         return 0
+
+def get_user_setting(user_id, key):
+    """获取用户的特定设置项。"""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM user_settings WHERE user_id = ?', (user_id,))
+    row = cursor.fetchone()
+    if row and key in row.keys():
+        return row[key]
+    return None
+
+def update_user_setting(user_id, key, value):
+    """更新用户的特定设置项。"""
+    db = get_db()
+    # 确保用户记录存在
+    get_user_identity(user_id)
+    # 更新特定字段
+    db.execute(f'UPDATE user_settings SET {key} = ? WHERE user_id = ?', (value, user_id))
+    db.commit()
 
 def log_access(user_id):
     """记录用户访问。"""
