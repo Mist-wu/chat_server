@@ -72,9 +72,9 @@ def get_response(user_id, user_message):
                 # 天气查询成功，不计入历史，直接返回结果
                 return report
         else:
-            # 没找到城市，向用户提问
+            # 没找到城市，向用户提问，并直接返回
             db.update_user_setting(user_id, 'pending_action', 'awaiting_city_for_weather')
-            return "好的，请问您想查询哪个城市的天气？"
+            return "好的，请问您想查询哪里的天气？"
 
     # 3. 如果以上都不是，则走标准聊天流程
     identity_id = db.get_user_identity(user_id)
