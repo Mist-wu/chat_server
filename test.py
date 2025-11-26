@@ -6,10 +6,10 @@
 import requests
 import time
 import hashlib
-import xml.etree.ElementTree as ET
+import xml. etree.ElementTree as ET
 
 # 配置
-SERVER_URL = "http://127.0.0. 1:80"  # main.py 运行的地址
+SERVER_URL = "http://127.0.0.1:80"  # main.py 运行的地址
 TOKEN = "mist"  # 与 config.py 中的 TOKEN 一致
 TEST_USER_ID = "test_user_from_terminal"  # 模拟的用户 OpenID
 BOT_ID = "gh_test_bot"  # 模拟的公众号ID
@@ -30,7 +30,7 @@ def build_message_xml(content: str) -> str:
     构建发送给服务器的微信消息 XML
     """
     timestamp = int(time.time())
-    msg_id = str(int(time.time() * 1000))  # 模拟消息ID
+    msg_id = str(int(time. time() * 1000))  # 模拟消息ID
     
     xml_template = f"""<xml>
     <ToUserName><![CDATA[{BOT_ID}]]></ToUserName>
@@ -87,10 +87,10 @@ def send_message(content: str) -> str:
             timeout=30
         )
         response.encoding = 'utf-8'
-        return parse_response_xml(response.text)
+        return parse_response_xml(response. text)
     except requests.exceptions.ConnectionError:
-        return "[错误] 无法连接到服务器，请确保 main.py 已启动 (python main.py)"
-    except requests.exceptions.Timeout:
+        return "[错误] 无法连接到服务器，请确保 main. py 已启动 (python main. py)"
+    except requests.exceptions. Timeout:
         return "[错误] 请求超时"
     except Exception as e:
         return f"[错误] {e}"
@@ -153,7 +153,7 @@ def main():
             user_input = input("你: ").strip()
             
             # 退出命令
-            if user_input.lower() in ('exit', 'quit', '退出'):
+            if user_input. lower() in ('exit', 'quit', '退出'):
                 print("再见！")
                 break
             
