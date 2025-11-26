@@ -1,13 +1,19 @@
+import os
+from dotenv import load_dotenv
+
+# 加载 .env 文件
+load_dotenv()
+
 # CLOUD FLARE 配置
-ACCOUNT_ID = "a100979d641a7b41db7b7cfa3c33d166"
-AUTH_TOKEN = "_cwfE56txLheIYD3Ykqs-9D2J6AQ6zRDQ-3EB-Zm"
+ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
+AUTH_TOKEN = os.getenv("CLOUDFLARE_AUTH_TOKEN", "")
 MODEL = "llama-3.1-8b-instruct-fast"
 
 # 微信验证token
-TOKEN = "mist"
+TOKEN = os.getenv("WECHAT_TOKEN", "")
 
-APP_ID = "wx6db309f2190fce40"
-APP_SECRET = "b4d14710fd09cab5450046cfe974f8d7"
+APP_ID = os.getenv("WECHAT_APP_ID", "")
+APP_SECRET = os.getenv("WECHAT_APP_SECRET", "")
 
 # 最大历史会话长度
 MAX_HISTORY_LEN = 101  # 包含系统指令 + 100条消息
