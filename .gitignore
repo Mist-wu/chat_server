@@ -3,5 +3,6 @@ __pycache__/
 
 # 忽略配置文件和数据库
 config.py
+database.db
 
 
