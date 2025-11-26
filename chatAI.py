@@ -8,7 +8,7 @@ import re # 导入正则表达式模块
     
 def get_identity_prompt(identity_id):
     """根据身份ID获取对应的prompt内容。"""
-    base_prompt = "你是一个名为'驱不散的雾'的AI助手。你的任务是友好、简洁地回答用户的问题。请始终使用简体中文回复。回复应像真人聊天，通常不超过30字，除非用户要求详细解释。"
+    base_prompt = "你是一个名为驱不散的雾的AI助手。你的任务是友好、简洁地回答用户的问题。请始终使用简体中文回复。回复应像真人聊天，通常不超过30字，除非用户要求详细解释。"
 
     if identity_id == 0:
         return base_prompt
