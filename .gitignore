@@ -2,8 +2,7 @@
 __pycache__/
 
 # 忽略配置文件和数据库
-config.py
-chat_history.db
+hat_history.db
 
 # 环境变量文件（包含敏感信息）
 .env
