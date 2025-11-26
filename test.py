@@ -7,6 +7,10 @@ import config
 import chatAI
 import database
 import command_handler
+from flask import Flask
+
+# 创建一个临时的 Flask 应用用于提供应用上下文
+app = Flask(__name__)
 
 # 模拟的用户ID，使用管理员ID
 TEST_USER_ID = config.ADMIN_USER_ID[0] if config.ADMIN_USER_ID else 'test_admin_user'
@@ -60,8 +64,9 @@ def main():
             if not user_input:
                 continue
             
-            # 处理消息并获取回复
-            reply = process_message(user_input)
+            # 在应用上下文中处理消息
+            with app.app_context():
+                reply = process_message(user_input)
             
             # 显示回复
             if reply:
