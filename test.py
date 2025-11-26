@@ -1,49 +1,146 @@
 """
-命令行测试工具 - 模拟微信聊天功能
-用于在本地测试 chatAI 和 command_handler 的功能
+命令行测试工具 - 模拟微信客户端功能
+通过向 main.py 的 HTTP 接口发送请求来测试
 """
 
-import config
-import chatAI
-import database
-import command_handler
-from flask import Flask
+import requests
+import time
+import hashlib
+import xml.etree.ElementTree as ET
 
-# 创建一个临时的 Flask 应用用于提供应用上下文
-app = Flask(__name__)
+# 配置
+SERVER_URL = "http://127.0.0. 1:80"  # main.py 运行的地址
+TOKEN = "mist"  # 与 config.py 中的 TOKEN 一致
+TEST_USER_ID = "test_user_from_terminal"  # 模拟的用户 OpenID
+BOT_ID = "gh_test_bot"  # 模拟的公众号ID
 
-# 模拟的用户ID，使用管理员ID
-TEST_USER_ID = config.ADMIN_USER_ID[0] if config.ADMIN_USER_ID else 'test_admin_user'
 
-
-def process_message(user_input: str) -> str:
+def generate_signature(timestamp: str, nonce: str) -> str:
     """
-    处理用户输入，模拟 main.py 中的消息处理逻辑。
+    生成微信验证签名
     """
-    user_input = user_input.strip()
+    tmp_list = [TOKEN, timestamp, nonce]
+    tmp_list.sort()
+    tmp_str = ''. join(tmp_list)
+    return hashlib.sha1(tmp_str.encode('utf-8')).hexdigest()
+
+
+def build_message_xml(content: str) -> str:
+    """
+    构建发送给服务器的微信消息 XML
+    """
+    timestamp = int(time.time())
+    msg_id = str(int(time.time() * 1000))  # 模拟消息ID
     
-    if not user_input:
-        return ""
+    xml_template = f"""<xml>
+    <ToUserName><![CDATA[{BOT_ID}]]></ToUserName>
+    <FromUserName><![CDATA[{TEST_USER_ID}]]></FromUserName>
+    <CreateTime>{timestamp}</CreateTime>
+    <MsgType><![CDATA[text]]></MsgType>
+    <Content><![CDATA[{content}]]></Content>
+    <MsgId>{msg_id}</MsgId>
+</xml>"""
+    return xml_template
+
+
+def parse_response_xml(xml_str: str) -> str:
+    """
+    解析服务器返回的 XML，提取回复内容
+    """
+    if not xml_str or xml_str.strip() == "success":
+        return "[服务器返回: success]"
     
-    # 指令处理
-    if user_input. startswith("/"):
-        return command_handler.handle_command(user_input, TEST_USER_ID)
-    else:
-        # 正常对话处理
-        return chatAI.get_response(TEST_USER_ID, user_input)
+    try:
+        root = ET.fromstring(xml_str)
+        content = root.find('Content')
+        if content is not None and content.text:
+            return content.text
+        else:
+            return f"[无法解析的响应: {xml_str[:100]}...]"
+    except ET.ParseError:
+        return f"[XML解析失败: {xml_str[:100]}...]"
+
+
+def send_message(content: str) -> str:
+    """
+    向服务器发送消息并获取回复
+    """
+    # 构建请求数据
+    xml_data = build_message_xml(content)
+    
+    # 生成签名参数
+    timestamp = str(int(time.time()))
+    nonce = "test_nonce_123"
+    signature = generate_signature(timestamp, nonce)
+    
+    # 发送 POST 请求
+    try:
+        response = requests.post(
+            SERVER_URL,
+            data=xml_data. encode('utf-8'),
+            params={
+                'signature': signature,
+                'timestamp': timestamp,
+                'nonce': nonce
+            },
+            headers={'Content-Type': 'application/xml'},
+            timeout=30
+        )
+        response.encoding = 'utf-8'
+        return parse_response_xml(response.text)
+    except requests.exceptions.ConnectionError:
+        return "[错误] 无法连接到服务器，请确保 main.py 已启动 (python main.py)"
+    except requests.exceptions.Timeout:
+        return "[错误] 请求超时"
+    except Exception as e:
+        return f"[错误] {e}"
+
+
+def verify_server() -> bool:
+    """
+    验证服务器是否正常运行（模拟微信服务器验证）
+    """
+    timestamp = str(int(time.time()))
+    nonce = "verify_nonce"
+    echostr = "verify_success"
+    signature = generate_signature(timestamp, nonce)
+    
+    try:
+        response = requests.get(
+            SERVER_URL,
+            params={
+                'signature': signature,
+                'timestamp': timestamp,
+                'nonce': nonce,
+                'echostr': echostr
+            },
+            timeout=5
+        )
+        return response.text == echostr
+    except:
+        return False
 
 
 def main():
     """
     主函数 - 命令行交互循环
     """
-    # 初始化数据库
-    database.init_db()
-    
     print("=" * 50)
-    print("命令行聊天测试工具")
-    print(f"当前用户ID: {TEST_USER_ID}")
-    print(f"用户身份: 管理员" if TEST_USER_ID in config.ADMIN_USER_ID else "用户身份: 普通用户")
+    print("微信客户端模拟器 - 命令行测试工具")
+    print(f"服务器地址: {SERVER_URL}")
+    print(f"模拟用户ID: {TEST_USER_ID}")
+    print("=" * 50)
+    
+    # 检查服务器连接
+    print("正在检查服务器连接...")
+    if verify_server():
+        print("✓ 服务器连接正常")
+    else:
+        print("✗ 无法连接服务器，请先启动 main. py")
+        print("  运行命令: python main. py")
+        print("=" * 50)
+        print("提示: 你也可以继续尝试发送消息")
+    
     print("=" * 50)
     print("输入消息开始聊天，输入 'exit' 或 'quit' 退出")
     print("输入 '/指令' 查看所有可用指令")
@@ -64,13 +161,11 @@ def main():
             if not user_input:
                 continue
             
-            # 在应用上下文中处理消息
-            with app.app_context():
-                reply = process_message(user_input)
+            # 发送消息并获取回复
+            reply = send_message(user_input)
             
             # 显示回复
-            if reply:
-                print(f"AI: {reply}")
+            print(f"AI: {reply}")
             print()
             
         except KeyboardInterrupt:
