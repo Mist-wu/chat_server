@@ -3,7 +3,6 @@ import requests
 import os
 import tool.database as db
 import tool.weather as weather  # 导入天气模块
-import re # 导入正则表达式模块
 
     
 def get_identity_prompt(identity_id):

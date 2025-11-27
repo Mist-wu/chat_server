@@ -6,7 +6,7 @@
 import requests
 import time
 import hashlib
-import xml. etree.ElementTree as ET
+import xml.etree.ElementTree as ET
 
 # 配置
 SERVER_URL = "http://127.0.0.1:80"  # main.py 运行的地址
@@ -21,7 +21,7 @@ def generate_signature(timestamp: str, nonce: str) -> str:
     """
     tmp_list = [TOKEN, timestamp, nonce]
     tmp_list.sort()
-    tmp_str = ''. join(tmp_list)
+    tmp_str = ''.join(tmp_list)
     return hashlib.sha1(tmp_str.encode('utf-8')).hexdigest()
 
 
@@ -30,7 +30,7 @@ def build_message_xml(content: str) -> str:
     构建发送给服务器的微信消息 XML
     """
     timestamp = int(time.time())
-    msg_id = str(int(time. time() * 1000))  # 模拟消息ID
+    msg_id = str(int(time.time() * 1000))  # 模拟消息ID
     
     xml_template = f"""<xml>
     <ToUserName><![CDATA[{BOT_ID}]]></ToUserName>
@@ -77,7 +77,7 @@ def send_message(content: str) -> str:
     try:
         response = requests.post(
             SERVER_URL,
-            data=xml_data. encode('utf-8'),
+            data=xml_data.encode('utf-8'),
             params={
                 'signature': signature,
                 'timestamp': timestamp,
@@ -87,10 +87,10 @@ def send_message(content: str) -> str:
             timeout=30
         )
         response.encoding = 'utf-8'
-        return parse_response_xml(response. text)
+        return parse_response_xml(response.text)
     except requests.exceptions.ConnectionError:
-        return "[错误] 无法连接到服务器，请确保 main. py 已启动 (python main. py)"
-    except requests.exceptions. Timeout:
+        return "[错误] 无法连接到服务器，请确保 main.py 已启动 (python main.py)"
+    except requests.exceptions.Timeout:
         return "[错误] 请求超时"
     except Exception as e:
         return f"[错误] {e}"
@@ -136,8 +136,8 @@ def main():
     if verify_server():
         print("✓ 服务器连接正常")
     else:
-        print("✗ 无法连接服务器，请先启动 main. py")
-        print("  运行命令: python main. py")
+        print("✗ 无法连接服务器，请先启动 main.py")
+        print("  运行命令: python main.py")
         print("=" * 50)
         print("提示: 你也可以继续尝试发送消息")
     
@@ -153,7 +153,7 @@ def main():
             user_input = input("你: ").strip()
             
             # 退出命令
-            if user_input. lower() in ('exit', 'quit', '退出'):
+            if user_input.lower() in ('exit', 'quit', '退出'):
                 print("再见！")
                 break
             
