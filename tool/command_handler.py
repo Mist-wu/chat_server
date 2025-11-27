@@ -1,8 +1,12 @@
 import config
-import database
+import tool.database as database
 import random
 from datetime import datetime
-import weather
+import tool.weather as weather
+import os
+
+# 获取项目根目录
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def handle_command(user_input, from_user_name):
     """
@@ -76,7 +80,8 @@ def handle_command(user_input, from_user_name):
         reply_content = f"已随机切换身份为：{config.PERSONAS[random_id_str]['name']}"
     
     elif command == '/指令':
-        doc_file = 'command_system.md' if is_admin else 'command_user.md'
+        doc_name = 'command_system.md' if is_admin else 'command_user.md'
+        doc_file = os.path.join(BASE_DIR, 'command_md', doc_name)
         try:
             with open(doc_file, 'r', encoding='utf-8') as f:
                 reply_content = f.read()

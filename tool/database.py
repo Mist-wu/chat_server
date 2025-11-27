@@ -1,9 +1,12 @@
 import sqlite3
 import json
+import os
 from datetime import datetime
 from flask import g # 导入g
 
-DATABASE_FILE = 'chat_history.db'
+# 数据库文件放在项目根目录
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATABASE_FILE = os.path.join(BASE_DIR, 'chat_history.db')
 
 def get_db():
     """
@@ -119,10 +122,15 @@ def get_user_setting(user_id, key):
 
 def update_user_setting(user_id, key, value):
     """更新用户的特定设置项。"""
+    # 白名单验证，防止SQL注入
+    allowed_keys = {'identity_id', 'pending_action'}
+    if key not in allowed_keys:
+        raise ValueError(f"Invalid setting key: {key}")
+    
     db = get_db()
     # 确保用户记录存在
     db.execute('INSERT OR IGNORE INTO user_settings (user_id, identity_id) VALUES (?, 0)', (user_id,))
-    # 更新特定字段
+    # 更新特定字段（key已通过白名单验证）
     db.execute(f'UPDATE user_settings SET {key} = ? WHERE user_id = ?', (value, user_id))
     db.commit()
     if 'db' not in g:

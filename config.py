@@ -31,4 +31,7 @@ PERSONAS = {
     "3": {"name": "春日野穹", "file": "Kasugano.txt"}
 }
 
-FEEDBACK_FILE = 'user_feedback.txt'
+# 项目根目录
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+FEEDBACK_FILE = os.path.join(BASE_DIR, 'user_feedback.txt')

@@ -1,8 +1,8 @@
 import config
 import requests
 import os
-import database as db
-import weather  # 导入天气模块
+import tool.database as db
+import tool.weather as weather  # 导入天气模块
 import re # 导入正则表达式模块
 
     
@@ -22,7 +22,9 @@ def get_identity_prompt(identity_id):
         return base_prompt
 
     try:
-        filepath = os.path.join(os.path.dirname(__file__), 'prompt', filename)
+        # prompt 文件夹在项目根目录，不在 tool 目录下
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        filepath = os.path.join(base_dir, 'prompt', filename)
         with open(filepath, 'r', encoding='utf-8') as f:
             persona_prompt = f.read().strip()
             return persona_prompt

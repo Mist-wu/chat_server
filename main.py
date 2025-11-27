@@ -3,10 +3,10 @@ import time
 from flask import Flask, request, g # 导入 g
 import xml.etree.ElementTree as ET
 import config
-import chatAI
-import database
-import command_handler # 导入新的指令处理模块
-import weather
+import tool.chatAI as chatAI
+import tool.database as database
+import tool.command_handler as command_handler # 导入新的指令处理模块
+import tool.weather as weather
 import threading
 
 # --- Flask Web 应用 ---
